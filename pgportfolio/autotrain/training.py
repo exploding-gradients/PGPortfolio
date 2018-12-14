@@ -40,6 +40,36 @@ def train_all(processes=1, device="cpu"):
                       at file and info at console. If greater than 1, the logging level is
                       info at file and warming at console.
     """
+    #import ipdb; ipdb.set_trace()
+    if processes == 1:
+        console_level = logging.INFO
+        logfile_level = logging.DEBUG
+    else:
+        console_level = logging.WARNING
+        logfile_level = logging.INFO
+    train_dir = "train_package"
+    if not os.path.exists("./" + train_dir): #if the directory does not exist, creates one
+        os.makedirs("./" + train_dir)
+    all_subdir = os.listdir("./" + train_dir)
+    all_subdir.sort()
+    pool = []
+    for dir in all_subdir:
+        # train only if the log dir does not exist
+        if not str.isdigit(dir):
+            return
+        # NOTE: logfile is for compatibility reason
+        if not (os.path.isdir("./"+train_dir+"/"+dir+"/tensorboard") or os.path.isdir("./"+train_dir+"/"+dir+"/logfile")):
+            train_one(
+                "./" + train_dir + "/" + dir + "/netfile",
+                load_config(dir),
+                "./" + train_dir + "/" + dir + "/tensorboard",
+                dir, logfile_level, console_level, device)
+    print("All the Tasks are Over")
+
+
+"""
+def train_all(processes=1, device="cpu"):
+    #import ipdb; ipdb.set_trace()
     if processes == 1:
         console_level = logging.INFO
         logfile_level = logging.DEBUG
@@ -79,3 +109,4 @@ def train_all(processes=1, device="cpu"):
             if len(pool)<processes:
                 wait = False
     print("All the Tasks are Over")
+"""

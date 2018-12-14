@@ -25,12 +25,14 @@ class CoinList(object):
                                                            strftime('%Y-%m-%d %H:%M'),
                                                            datetime.fromtimestamp(end-volume_forward).
                                                            strftime('%Y-%m-%d %H:%M')))
+
         for k, v in vol.items():
-            if k.startswith("BTC_") or k.endswith("_BTC"):
+            print(k, v)
+            if k.startswith("USDT_") or k.endswith("_USDT"):
                 pairs.append(k)
                 for c, val in v.items():
-                    if c != 'BTC':
-                        if k.endswith('_BTC'):
+                    if c != 'USDT':
+                        if k.endswith('_USDT'):
                             coins.append('reversed_' + c)
                             prices.append(1.0 / float(ticker[k]['last']))
                         else:
@@ -65,7 +67,7 @@ class CoinList(object):
         chart = self.get_chart_until_success(pair=pair, period=DAY, start=start, end=end)
         result = 0
         for one_day in chart:
-            if pair.startswith("BTC_"):
+            if pair.startswith("USDT_"):
                 result += one_day['volume']
             else:
                 result += one_day["quoteVolume"]

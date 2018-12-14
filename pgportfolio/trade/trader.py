@@ -90,6 +90,10 @@ class Trader:
         starttime = time.time()
         omega = self._agent.decide_by_history(self.generate_history_matrix(),
                                               self._last_omega.copy())
+        print("Omega", omega)
+        top_allocs = [("Cash", omega[0])] + [(self._coin_name_list[i], omega[i+1]) for i in range(len(self._coin_name_list))]
+        print("Sorted allocation:", sorted(top_allocs, key=lambda x: x[1], reverse=True))
+
         self.trade_by_strategy(omega)
         if self._agent_type == "nn":
             self.rolling_train()

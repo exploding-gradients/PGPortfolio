@@ -20,6 +20,7 @@ class HistoryManager:
         self.__storage_period = FIVE_MINUTES  # keep this as 300
         self._coin_number = coin_number
         self._online = online
+
         if self._online:
             self._coin_list = CoinList(end, volume_average_days, volume_forward)
         self.__volume_forward = volume_forward
@@ -171,6 +172,7 @@ class HistoryManager:
             cursor = connection.cursor()
             min_date = cursor.execute('SELECT MIN(date) FROM History WHERE coin=?;', (coin,)).fetchall()[0][0]
             max_date = cursor.execute('SELECT MAX(date) FROM History WHERE coin=?;', (coin,)).fetchall()[0][0]
+            print(coin, min_date, max_date)
 
             if min_date==None or max_date==None:
                 self.__fill_data(start, end, coin, cursor)

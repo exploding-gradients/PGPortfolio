@@ -202,6 +202,7 @@ class NNAgent:
 
     # the history is a 3d matrix, return a asset vector
     def decide_by_history(self, history, last_w):
+        print("History vector", history, "last_omega", last_w)
         assert isinstance(history, np.ndarray),\
             "the history should be a numpy array, not %s" % type(history)
         assert not np.any(np.isnan(last_w))
@@ -211,3 +212,35 @@ class NNAgent:
         return np.squeeze(self.session.run(self.__net.output, feed_dict={self.__net.input_tensor: history,
                                                                          self.__net.previous_w: last_w[np.newaxis, 1:],
                                                                          self.__net.input_num: 1}))
+
+import pandas
+def compute_rsi(series):
+
+    # Get the difference in price from previous step
+    delta = series.diff()
+    # Get rid of the first row, which is NaN since it did not have a previous
+    # row to calculate the differences
+    delta = delta[1:]
+
+    # Make the positive gains (up) and negative gains (down) Series
+    up, down = delta.copy(), delta.copy()
+    up[up < 0] = 0
+    down[down > 0] = 0
+
+    # Calculate the EWMA
+    roll_up1 = pandas.stats.moments.ewma(up, 14)
+    roll_down1 = pandas.stats.moments.ewma(down.abs(), 14)
+
+    # Calculate the RSI based on EWMA
+    RS1 = roll_up1 / roll_down1
+    RSI1 = 100.0 - (100.0 / (1.0 + RS1))
+
+    # Calculate the SMA
+    roll_up2 = pandas.rolling_mean(up, 14)
+    roll_down2 = pandas.rolling_mean(down.abs(), 14)
+
+    # Calculate the RSI based on SMA
+    RS2 = roll_up2 / roll_down2
+    RSI2 = 100.0 - (100.0 / (1.0 + RS2))
+
+    return RSI1, RSI2
