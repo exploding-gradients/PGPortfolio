@@ -120,6 +120,7 @@ class HistoryManager:
         finally:
             connection.commit()
             connection.close()
+
         return panel
 
     # select top coin_number of coins by volume from start to end

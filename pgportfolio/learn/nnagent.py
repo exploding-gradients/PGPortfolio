@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 import tflearn
 import tensorflow as tf
 import numpy as np
+import pandas
 from pgportfolio.constants import *
 import pgportfolio.learn.network as network
 
@@ -201,7 +202,12 @@ class NNAgent:
         return mu
 
     # the history is a 3d matrix, return a asset vector
-    def decide_by_history(self, history, last_w):
+    def decide_by_history(self, history, last_w, coin_list):
+        rsi_df = pandas.DataFrame()
+        for x in xrange(len(history[2])):
+            rsi_df[coin_list[x]] = RSI(pandas.Series(history[2][x]))
+        print("RSI by coin")
+        print(rsi_df)
         print("History vector", history, "last_omega", last_w)
         assert isinstance(history, np.ndarray),\
             "the history should be a numpy array, not %s" % type(history)
@@ -213,34 +219,18 @@ class NNAgent:
                                                                          self.__net.previous_w: last_w[np.newaxis, 1:],
                                                                          self.__net.input_num: 1}))
 
-import pandas
-def compute_rsi(series):
+def RSI(series, period=14):
+    # wilder's RSI
 
-    # Get the difference in price from previous step
     delta = series.diff()
-    # Get rid of the first row, which is NaN since it did not have a previous
-    # row to calculate the differences
-    delta = delta[1:]
-
-    # Make the positive gains (up) and negative gains (down) Series
     up, down = delta.copy(), delta.copy()
+
     up[up < 0] = 0
     down[down > 0] = 0
 
-    # Calculate the EWMA
-    roll_up1 = pandas.stats.moments.ewma(up, 14)
-    roll_down1 = pandas.stats.moments.ewma(down.abs(), 14)
+    rUp = up.ewm(com=period - 1, adjust=False).mean()
+    rDown = down.ewm(com=period - 1, adjust=False).mean().abs()
 
-    # Calculate the RSI based on EWMA
-    RS1 = roll_up1 / roll_down1
-    RSI1 = 100.0 - (100.0 / (1.0 + RS1))
+    rsi = 100 - 100 / (1 + rUp / rDown)
 
-    # Calculate the SMA
-    roll_up2 = pandas.rolling_mean(up, 14)
-    roll_down2 = pandas.rolling_mean(down.abs(), 14)
-
-    # Calculate the RSI based on SMA
-    RS2 = roll_up2 / roll_down2
-    RSI2 = 100.0 - (100.0 / (1.0 + RS2))
-
-    return RSI1, RSI2
+    return rsi

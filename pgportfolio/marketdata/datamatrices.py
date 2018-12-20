@@ -49,12 +49,17 @@ class DataMatrices:
                                                                          self.__end,
                                                                          period=period,
                                                                          features=type_list)
+            # TODO Remove pandas panel
+            self.__global_data.to_pickle("global_data.pkl")
         else:
             raise ValueError("market {} is not valid".format(market))
         self.__period_length = period
         # portfolio vector memory, [time, assets]
         self.__PVM = pd.DataFrame(index=self.__global_data.minor_axis,
                                   columns=self.__global_data.major_axis)
+
+        # the PVM data frame get indexed by the time frame(minor axis) and the instrument id(major index)
+        # then PVM get initialized to 1/no_of_coins
         self.__PVM = self.__PVM.fillna(1.0 / self.__coin_no)
 
         self._window_size = window_size
@@ -141,6 +146,8 @@ class DataMatrices:
         self.__replay_buffer.append_experience(appended_index)
 
     def get_test_set(self):
+        print ("Test Indices", self.test_indices)
+        print ("Test Data", self.__pack_samples(self.test_indices))
         return self.__pack_samples(self.test_indices)
 
     def get_training_set(self):
@@ -162,11 +169,13 @@ class DataMatrices:
 
         def setw(w):
             self.__PVM.iloc[indexs, :] = w
+        def settimestamp():
+            return self.__global_data.minor_axis[indexs[0]:indexs[len(indexs)-1]+1]
         M = [self.get_submatrix(index) for index in indexs]
         M = np.array(M)
         X = M[:, :, :, :-1]
         y = M[:, :, :, -1] / M[:, 0, None, :, -2]
-        return {"X": X, "y": y, "last_w": last_w, "setw": setw}
+        return {"X": X, "y": y, "last_w": last_w, "setw": setw, "timestamp": settimestamp()}
 
     # volume in y is the volume in next access period
     def get_submatrix(self, ind):
